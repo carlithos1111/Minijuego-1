@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  #juego { position: relative; width: 300px; height: 300px; margin: 0 auto; border: 2px solid #000; overflow: hidden; background: #eee; touch-action: none; }
+  #personaje { width: 70%; position: absolute; bottom: 0; left: 15%; pointer-events: none; z-index: 5; }
+  #mugre { width: 70%; position: absolute; bottom: 0; left: 15%; pointer-events: none; z-index: 10; opacity: 1; transition: opacity 0.5s, left 0.3s; }
+  #objeto-arrastrable { position: absolute; font-size: 40px; z-index: 20; display: none; cursor: grab; }
+  #burbujas-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 15; }
+  .burbuja { position: absolute; font-size: 20px; }
+  .btn { padding: 8px; margin: 3px; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<div id="juego">
+  <img id="fondo" src="https://i.postimg.cc/LYqSRfBJ/sala.png" style="width:100%; height:100%; position:absolute; top:0; left:0;">
+  <img id="personaje" src="https://i.postimg.cc/gcM0r4FG/idle_principal.gif">
+  <img id="mugre" src="https://i.postimg.cc/HxBnb1xq/Mugre.png">
+  <div id="objeto-arrastrable"></div>
+  <div id="burbujas-layer"></div>
+</div>
+
+<div id="controles">
+  <button id="btnMusica" class="btn" onclick="toggleMusica()">¡Empezar Música!</button><br>
+  <button class="btn" onclick="cambiarHabitacion('sala')">Sala</button>
+  <button class="btn" onclick="cambiarHabitacion('juegos')">Juegos</button>
+  <button class="btn" onclick="cambiarHabitacion('bano')">Baño</button>
+</div>
+
+<div id="botones-accion"></div>
+
+<script>
+  const audioRegadera = new Audio('https://www.dropbox.com/scl/fi/1rh9iyukp8xnkikf391sm/Regadera.mp3?rlkey=deu1fia9u788ehqpdy880gs51&st=8ivau6a1&dl=1');
+  const audioComer = new Audio('https://www.dropbox.com/scl/fi/i4wr3jq0bqol5a34tw0sl/Eating.mp3?rlkey=6y47rccbas692rgqciikl711f&st=6gvvwind&dl=1');
+  const audioPelota = new Audio('https://www.dropbox.com/scl/fi/tdsptugtjt7ju5buocenz/el-pepe.mp3?rlkey=biz6lpja38mkimhe46ajgl5cu&st=5dxiy8e2&dl=1');
+  const audioFondo = new Audio('https://www.dropbox.com/scl/fi/esgi2sj7ppn6gyiaaf2ul/Yael-Naim-New-Soul-Lyrics.mp3?rlkey=fi3cgf2yo2fnmnmzakdbbhc5v&st=gv6k51rd&dl=1');
+  const audioSalto = new Audio('https://www.dropbox.com/scl/fi/a2ix3s0ulud9dnv5yznzp/Salto.mp3?rlkey=ufvd27dslf7e6mlwz68dhqdcz&st=pmcpa3xg&dl=1');
+  audioFondo.loop = true;
+
+  function toggleMusica() {
+    let btn = document.getElementById('btnMusica');
+    if (audioFondo.paused) {
+      audioFondo.play();
+      btn.innerText = "Pausar Música";
+    } else {
+      audioFondo.pause();
+      btn.innerText = "Empezar Música";
+    }
+  }
+
+  const personaje = document.getElementById('personaje');
+  const fondo = document.getElementById('fondo');
+  const objeto = document.getElementById('objeto-arrastrable');
+  const mugre = document.getElementById('mugre');
+  const layer = document.getElementById('burbujas-layer');
+  const botonesAccion = document.getElementById('botones-accion');
+  let habitacionActual = 'sala';
+  let nivelSuciedad = 2;
+
+  function cambiarHabitacion(lugar) {
+    habitacionActual = lugar;
+    objeto.style.display = 'none';
+    layer.innerHTML = '';
+    mugre.style.left = (lugar === 'bano') ? '12%' : '15%';
+    mugre.style.opacity = (nivelSuciedad === 0) ? '0' : '1';
+
+    if (lugar === 'sala') {
+      fondo.src = 'https://i.postimg.cc/LYqSRfBJ/sala.png';
+      personaje.src = 'https://i.postimg.cc/gcM0r4FG/idle_principal.gif';
+      // Menú extendido de comida
+      botonesAccion.innerHTML = '<button class="btn" onclick="prepararAccion(\'🍎\', \'comida\')">🍎</button> <button class="btn" onclick="prepararAccion(\'🐟\', \'comida\')">🐟</button> <button class="btn" onclick="prepararAccion(\'🍗\', \'comida\')">🍗</button> <button class="btn" onclick="prepararAccion(\'🥒\', \'comida\')">🥒</button> <button class="btn" onclick="prepararAccion(\'🥕\', \'comida\')">🥕</button> <button class="btn" onclick="prepararAccion(\'🥩\', \'comida\')">🥩</button> <button class="btn" onclick="prepararAccion(\'🥚\', \'comida\')">🥚</button> <button class="btn" onclick="prepararAccion(\'🧀\', \'comida\')">🧀</button>';
+    } else if (lugar === 'bano') {
+      fondo.src = 'https://i.postimg.cc/mcgRXKPj/bano.png';
+      personaje.src = 'https://i.postimg.cc/RF40JDZN/bath.gif';
+      botonesAccion.innerHTML = '<button class="btn" onclick="prepararAccion(\'🧽\', \'esponja\')">🧽</button> <button class="btn" onclick="prepararAccion(\'🚿\', \'regadera\')">🚿</button>';
+    } else {
+      fondo.src = 'https://i.postimg.cc/PpLHhZzs/juegos.png';
+      personaje.src = 'https://i.postimg.cc/gcM0r4FG/idle_principal.gif';
+      botonesAccion.innerHTML = '<button class="btn" onclick="ejecutarAccion(\'saltar\')">🆙 Saltar</button> <button class="btn" onclick="ejecutarAccion(\'pelota\')">⚽ Pelota</button>';
+    }
+  }
+
+  function prepararAccion(emoji, tipo) {
+    objeto.innerText = emoji;
+    objeto.style.display = 'block';
+    objeto.style.left = '160px'; objeto.style.top = '220px';
+    window.modoActual = tipo;
+  }
+
+  function ejecutarAccion(tipo) {
+    if(tipo === 'saltar') { personaje.src = 'https://i.postimg.cc/tRrg7D0r/jump.gif'; audioSalto.play(); }
+    else if(tipo === 'pelota') { personaje.src = 'https://i.postimg.cc/XJLYfkrF/play-ball.gif'; audioPelota.play(); }
+    else if(tipo === 'comer') { personaje.src = 'https://i.postimg.cc/4ds3HSxx/eat.gif'; audioComer.play(); }
+    setTimeout(() => { personaje.src = (habitacionActual === 'bano') ? 'https://i.postimg.cc/RF40JDZN/bath.gif' : 'https://i.postimg.cc/gcM0r4FG/idle_principal.gif'; }, 2000);
+  }
+
+  objeto.addEventListener('touchmove', (e) => {
+    let touch = e.touches[0];
+    let rect = document.getElementById('juego').getBoundingClientRect();
+    let x = touch.clientX - rect.left - 20;
+    let y = touch.clientY - rect.top - 20;
+    objeto.style.left = x + 'px'; objeto.style.top = y + 'px';
+    if (window.modoActual === 'esponja') {
+      let b = document.createElement('div');
+      b.className = 'burbuja'; b.innerText = '🫧'; b.style.left = x + 'px'; b.style.top = y + 'px';
+      layer.appendChild(b);
+      if (x > 80 && x < 200 && y > 100 && y < 250) { nivelSuciedad = 1; mugre.style.opacity = '0.5'; }
+    } else if (window.modoActual === 'regadera') {
+      if (audioRegadera.paused) audioRegadera.play();
+      let burbujas = document.getElementsByClassName('burbuja');
+      for (let i = burbujas.length - 1; i >= 0; i--) { if (Math.abs(x - parseInt(burbujas[i].style.left)) < 30) burbujas[i].remove(); }
+      if (x > 80 && x < 200 && y > 100 && y < 250 && nivelSuciedad === 1) { nivelSuciedad = 0; mugre.style.opacity = '0'; }
+    }
+  });
+
+  objeto.addEventListener('touchend', (e) => {
+    if (window.modoActual === 'regadera') { audioRegadera.pause(); audioRegadera.currentTime = 0; }
+    if (window.modoActual === 'comida') {
+        let rectObjeto = objeto.getBoundingClientRect();
+        let rectJuego = document.getElementById('juego').getBoundingClientRect();
+        if ((rectObjeto.left - rectJuego.left) > 50 && (rectObjeto.left - rectJuego.left) < 200) {
+            ejecutarAccion('comer'); objeto.style.display = 'none'; window.modoActual = '';
+        }
+    }
+  });
+
+  cambiarHabitacion('sala');
+</script>
+</body>
+</html>
